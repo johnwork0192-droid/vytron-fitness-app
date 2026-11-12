@@ -1,6 +1,6 @@
 # VYTRON FITNESS
 
-A premium dark fitness dashboard built with React, Vite, and TypeScript. The first-stage interface includes a personalized training overview, weekly planner, workout cards, progress snapshots, and an AI Coach entry point.
+A premium dark fitness dashboard built with React, Vite, and TypeScript. Stage 2 adds an interactive Three.js anatomy viewer and a filterable HOME/GYM exercise library.
 
 ## Requirements
 
@@ -21,15 +21,15 @@ npm run build
 npm run preview
 ```
 
-## Project structure
+## Structure
 
 ```text
 src/
-  data/          Typed dashboard and workout seed data
-  components/    Reusable UI components (reserved for upcoming feature work)
-  App.tsx        Dashboard composition and initial interactions
-  main.tsx       React entry point
-  styles.css     Theme, responsive layout, and component styling
+  data/                    Typed dashboard seed data
+  features/training/       Three.js anatomy, exercise catalogue, session controls
+  App.tsx                  Existing dashboard composition
+  main.tsx                 React entry point and feature integration
+  styles.css               Dashboard theme and responsive layout
 ```
 
-The dashboard is structured to evolve into dedicated 3D body-model, training, AI Coach, and account features in later stages. Current workout and dashboard data is local seed data; no backend or AI service is connected yet.
+The training studio opens from the dashboard's Workouts navigation. It includes a draggable 3D mannequin, front/back/side camera presets, clickable muscle focus, HOME/GYM and level filters, technique instructions, and basic set/rest session controls. Exercise content is local seed data; there is no backend, medical guidance, or AI service connected. The 3D model is a procedural stylized anatomical mannequin, not a medical-grade anatomy asset.
