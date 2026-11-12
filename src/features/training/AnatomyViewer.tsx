@@ -2,6 +2,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { Suspense, useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import type { ThreeEvent } from '@react-three/fiber'
 import type { MuscleGroup } from './exercises'
 
 export type ModelView = 'Front' | 'Back' | 'Side'
@@ -18,7 +19,7 @@ type MuscleProps = { position: [number, number, number]; scale: [number, number,
 function Muscle({ position, scale, group, selected, rotation, onSelect }: MuscleProps) {
   const active = selected === group
   return (
-    <mesh position={position} scale={scale} rotation={rotation} onClick={(event) => { event.stopPropagation(); onSelect(group) }} castShadow>
+    <mesh position={position} scale={scale} rotation={rotation} onClick={(event: ThreeEvent<MouseEvent>) => { event.stopPropagation(); onSelect(group) }} castShadow>
       <sphereGeometry args={[1, 28, 22]} />
       <meshStandardMaterial color={active ? '#b9ff55' : '#f0f1ee'} emissive={active ? '#61ff00' : '#000000'} emissiveIntensity={active ? 1.4 : 0} roughness={active ? 0.28 : 0.46} metalness={0.04} />
     </mesh>
