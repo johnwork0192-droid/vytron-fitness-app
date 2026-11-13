@@ -9,10 +9,17 @@ export type CoachStore = { profile: CoachProfile; messages: ChatMessage[]; plans
 
 const KEY = 'vytron-ai-coach-v1'
 export const defaultProfile: CoachProfile = { name: 'Jordan', age: 28, height: 178, weight: 76, goal: 'muscle', level: 'Intermediate', place: 'GYM', days: 3, sex: 'male' }
+function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null }
 export function loadCoachStore(): CoachStore {
   try {
-    const saved = localStorage.getItem(KEY)
-    if (saved) return { ...JSON.parse(saved) as CoachStore, profile: { ...defaultProfile, ...(JSON.parse(saved) as CoachStore).profile } }
+    const raw = localStorage.getItem(KEY)
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw)
+      if (isRecord(parsed)) {
+        const profile = isRecord(parsed.profile) ? { ...defaultProfile, ...parsed.profile } as CoachProfile : defaultProfile
+        return { profile, messages: Array.isArray(parsed.messages) ? parsed.messages as ChatMessage[] : [], plans: Array.isArray(parsed.plans) ? parsed.plans as WorkoutPlan[] : [], sessions: Array.isArray(parsed.sessions) ? parsed.sessions as SessionLog[] : [], weightLog: Array.isArray(parsed.weightLog) ? parsed.weightLog as CoachStore['weightLog'] : [] }
+      }
+    }
   } catch { /* use safe defaults when storage is unavailable or invalid */ }
   return { profile: defaultProfile, messages: [], plans: [], sessions: [], weightLog: [] }
 }
@@ -31,14 +38,18 @@ export function createPlan(profile: CoachProfile, focus: MuscleGroup[] = []): Wo
     const chosen = (levelMatch.length ? levelMatch : candidates).slice(0, 4)
     return { name: `Day ${index + 1} · ${group}`, exercises: (chosen.length ? chosen : exercises.filter((exercise) => exercise.place === profile.place)).map((exercise) => exercise.id) }
   })
-  return { id: crypto.randomUUID(), title: `${profile.place} · ${profile.goal.replace('-', ' ')} plan`, createdAt: Date.now(), days }
+  const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+  return { id, title: `${profile.place} · ${profile.goal.replace('-', ' ')} plan`, createdAt: Date.now(), days }
 }
 
 export function estimateNutrition(profile: CoachProfile) {
-  const bmr = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + (profile.sex === 'male' ? 5 : -161)
-  const maintenance = Math.round(bmr * (1.45 + Math.min(profile.days, 6) * 0.025))
+  const safeWeight = Number.isFinite(profile.weight) ? Math.min(250, Math.max(35, profile.weight)) : defaultProfile.weight
+  const safeHeight = Number.isFinite(profile.height) ? Math.min(230, Math.max(120, profile.height)) : defaultProfile.height
+  const safeAge = Number.isFinite(profile.age) ? Math.min(100, Math.max(16, profile.age)) : defaultProfile.age
+  const bmr = 10 * safeWeight + 6.25 * safeHeight - 5 * safeAge + (profile.sex === 'male' ? 5 : -161)
+  const maintenance = Math.round(bmr * (1.45 + Math.min(Math.max(profile.days, 0), 6) * 0.025))
   const calories = Math.max(1200, Math.round(maintenance + (profile.goal === 'muscle' ? 250 : profile.goal === 'fat-loss' ? -350 : 0)))
-  const protein = Math.round(profile.weight * (profile.goal === 'fat-loss' ? 1.8 : 1.6))
+  const protein = Math.round(safeWeight * (profile.goal === 'fat-loss' ? 1.8 : 1.6))
   const fat = Math.round(calories * 0.27 / 9)
   return { calories, protein, fat, carbs: Math.round((calories - protein * 4 - fat * 9) / 4) }
 }
@@ -66,5 +77,4 @@ export async function askCoach(message: string, context: CoachContext, signal?: 
   const aim = profile.goal === 'muscle' ? 'gradually increase reps or load while keeping good form' : profile.goal === 'fat-loss' ? 'pair sustainable nutrition with consistent strength training and everyday activity' : profile.goal === 'strength' ? 'focus on controlled, progressive compound lifts and longer rests' : 'build a repeatable routine with balanced strength and conditioning'
   return { mode: 'demo', text: `Based on your ${profile.level.toLowerCase()} level, ${profile.place} setup, and ${profile.days} training days/week, start with a repeatable plan and ${aim}. I can personalize this further when you log sessions and update your profile. Demo mode uses local rules, not a language model.` }
 }
-
 export function findExercise(id: string): Exercise | undefined { return exercises.find((exercise) => exercise.id === id) }
