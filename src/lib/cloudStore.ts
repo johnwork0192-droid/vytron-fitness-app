@@ -42,8 +42,36 @@ export async function saveCloudStore(userId: string, store: CoachStore) {
     check(await db.from('body_metrics').upsert({ user_id: userId, client_id: clientId, weight_kg: metric.weight, recorded_at: metric.date }, { onConflict: 'user_id,client_id' }))
   }
   // The endpoint persists real-AI turns. Persist DEMO conversations via authenticated RLS.
-  const { data: existing } = await db.from('coach_messages').select('content, role, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(200)
-  const known = new Set((existing ?? []).map((row) => `${row.role}|${row.created_at}|${row.content}`))
-  const missing = store.messages.filter((message) => !known.has(`${message.role}|${new Date(message.createdAt).toISOString()}|${message.text}`))
-  if (missing.length) check(await db.from('coach_messages').insert(missing.map((message) => ({ user_id: userId, role: message.role, content: message.text, created_at: new Date(message.createdAt).toISOString() })))
+  const { data: existing } = await db
+    .from('coach_messages')
+    .select('content, role, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  const known = new Set(
+    (existing ?? []).map(
+      (row) => ${row.role}|${row.created_at}|${row.content},
+    ),
+  )
+
+  const missing = store.messages.filter(
+    (message) =>
+      !known.has(
+        ${message.role}|${new Date(message.createdAt).toISOString()}|${message.text},
+      ),
+  )
+
+  if (missing.length) {
+    check(
+      await db.from('coach_messages').insert(
+        missing.map((message) => ({
+          user_id: userId,
+          role: message.role,
+          content: message.text,
+          created_at: new Date(message.createdAt).toISOString(),
+        })),
+      ),
+    )
+  }
 }
