@@ -140,10 +140,9 @@ export async function saveCloudStore(
     )
   }
 
-  for (const session of store.sessions) 
-{
-    const clientId = ${userId}:${session.date}:${session.exercise}`
-      
+  for (const session of store.sessions) {
+    const clientId = ${userId}:${session.date}:${session.exercise}
+
     check(
       await db.from('workout_sessions').upsert(
         {
@@ -161,7 +160,7 @@ export async function saveCloudStore(
   }
 
   for (const metric of store.weightLog) {
-    const clientId = ${userId}:${metric.date}
+    const clientId = `${userId}:${metric.date}`
 
     check(
       await db.from('body_metrics').upsert(
