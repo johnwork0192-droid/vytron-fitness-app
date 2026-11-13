@@ -141,7 +141,7 @@ export async function saveCloudStore(
   }
 
   for (const session of store.sessions) {
-    const clientId = ${userId}:${session.date}:${session.exercise}
+    const clientId = `${userId}:${session.date}:${session.exercise}`
 
     check(
       await db.from('workout_sessions').upsert(
@@ -186,14 +186,14 @@ export async function saveCloudStore(
 
   const known = new Set(
     (existing ?? []).map(
-      (row) => ${row.role}|${row.created_at}|${row.content},
+      (row) => `${row.role}|${row.created_at}|${row.content}`,
     ),
   )
 
   const missing = store.messages.filter(
     (message) =>
       !known.has(
-        ${message.role}|${new Date(message.createdAt).toISOString()}|${message.text},
+        `${message.role}|${new Date(message.createdAt).toISOString()}|${message.text}`,
       ),
   )
 
