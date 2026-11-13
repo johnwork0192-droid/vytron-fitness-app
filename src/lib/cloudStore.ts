@@ -56,11 +56,10 @@ export async function loadCloudStore(
   ])
 
   const profileRow = check(profileResult)
-  const messages = check(messageResult)
-  const plans = check(planResult)
-  const sessions = check(sessionResult)
-  const metrics = check(metricResult)
-
+  const messages = check(messageResult) ?? []
+  const plans = check(planResult) ?? []
+  const sessions = check(sessionResult) ?? []
+  const metrics = check(metricResult) ?? []
   const profile: CoachProfile = profileRow
     ? {
         ...defaultProfile,
