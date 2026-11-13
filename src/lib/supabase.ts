@@ -1,7 +1,7 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js'
 
 let client: SupabaseClient | null = null
-
+export function isSupabaseConfigured() { return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) }
 export function getSupabase(): SupabaseClient {
   const url = import.meta.env.VITE_SUPABASE_URL
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -9,7 +9,12 @@ export function getSupabase(): SupabaseClient {
   if (!client) client = createClient(url, anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
   return client
 }
-
-export function isSupabaseConfigured() {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+export async function getAccessToken(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null
+  const { data, error } = await getSupabase().auth.getSession()
+  if (error) throw error
+  return data.session?.access_token ?? null
+}
+export function publishAuthState(session: Session | null) {
+  window.dispatchEvent(new CustomEvent('vytron:auth-changed', { detail: { session } }))
 }
